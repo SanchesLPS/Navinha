@@ -28,30 +28,46 @@ def inicializacao():
     estrelas = carrega_estrelas()
 
     # CARREGA AS IMAGENS
-    def carrega_imagens() -> dict[str , pygame.Surface]:
+    def carrega_assets() -> dict[str , pygame.Surface]:
         nave = pygame.image.load('assets/img/playerShip1_orange.png')
         nave = pygame.transform.scale(nave, (60,60))
+
         image_fundo = pygame.image.load('assets/img/starfield.png')
         image_fundo = pygame.transform.scale(image_fundo, TAMANHO_TELA)
+
+        fonte = pygame.font.Font('assets/font/PressStart2P.ttf', 16)
         return {
             'nave' : nave,
-            'fundo' : image_fundo
+            'fundo' : image_fundo,
+            'fonte' : fonte
+
         }
 
-    assets = carrega_imagens()
+    assets = carrega_assets()
 
+    # POSICAO INICIAL DA NAVE
+    pos_nave = [TAMANHO_TELA[0]//2 - assets['nave'].get_width()//2,
+                    TAMANHO_TELA[1] - assets['nave'].get_height()]
+
+    # QUANTIDADE INICIAL DE VIDA
+    vidas = 3
+
+    # ESTADO
     return {
         'window' : window,
         'assets' : assets,
-        'estrelas' : estrelas
+        'estrelas' : estrelas,
+        'pos_nave' : pos_nave,
+        'vidas' : vidas
         
     }
 
 def desenha(estado):
     # NOMEIA AS VARIAVEIS
-    window = estado['window']
-    assets = estado['assets']
+    window : pygame.Surface = estado['window']
+    assets : dict[str, pygame.Surface]= estado['assets']
     estrelas : tuple[ dict[str, tuple[int] | int ] ] = estado['estrelas']
+    pos_nave = estado['pos_nave']
     
     # PRIMEIRO DESENHA O FUNDO
     window.blit(assets['fundo'], (0,0))
@@ -60,9 +76,12 @@ def desenha(estado):
     for estrela in estrelas:
         pygame.draw.circle(window, estrela['cor'], estrela['pos_circulo'], estrela['raio'])
 
-    pos_nave = (window.get_width()//2 - assets['nave'].get_width()//2,
-                window.get_height() - assets['nave'].get_height())
+    # DESENHA JOGADOR
     window.blit(assets['nave'], pos_nave)
+
+    # DESENHA CORACOES
+    coracoes = assets['fonte'].render(chr(9829) * estado['vidas'], True, VERMELHO )
+    window.blit(coracoes, (0,0))
 
     pygame.display.update()
 
