@@ -35,7 +35,7 @@ def inicializacao():
         image_fundo = pygame.image.load('assets/img/starfield.png')
         image_fundo = pygame.transform.scale(image_fundo, TAMANHO_TELA)
 
-        fonte = pygame.font.Font('assets/font/PressStart2P.ttf', 16)
+        fonte = pygame.font.Font('assets/font/PressStart2P.ttf', 12)
         return {
             'nave' : nave,
             'fundo' : image_fundo,
@@ -65,7 +65,7 @@ def inicializacao():
 def desenha(estado):
     # NOMEIA AS VARIAVEIS
     window : pygame.Surface = estado['window']
-    assets : dict[str, pygame.Surface]= estado['assets']
+    assets : dict[str, pygame.Surface | pygame.font.Font]= estado['assets']
     estrelas : tuple[ dict[str, tuple[int] | int ] ] = estado['estrelas']
     pos_nave = estado['pos_nave']
     
@@ -76,6 +76,11 @@ def desenha(estado):
     for estrela in estrelas:
         pygame.draw.circle(window, estrela['cor'], estrela['pos_circulo'], estrela['raio'])
 
+    # DESENHA FPS
+    fps = pygame.time.Clock().get_fps()
+    fps = assets['fonte'].render(f'FPS {fps}', True, VERMELHO)
+    window.blit(fps, (TAMANHO_TELA[0]-100, TAMANHO_TELA[1]-30))
+
     # DESENHA JOGADOR
     window.blit(assets['nave'], pos_nave)
 
@@ -85,22 +90,35 @@ def desenha(estado):
 
     pygame.display.update()
 
+def atualiza_estado(estado):
+    teclas = pygame.key.get_pressed()
 
+    if teclas[pygame.K_a]:
+        print("esquerda")
+
+    if teclas[pygame.K_d]:
+        print("direita")
+
+    if teclas[pygame.K_w]:
+        print("cima")
+
+    if teclas[pygame.K_s]:
+        print("baixo")
 
 def recebe_eventos():
     for event in pygame.event.get():
-        
-        # ----- Verifica consequências
-        if event.type == pygame.QUIT or event.type == 769:
+        # SE SAIR DO JOGO OU APERTAR Q
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             return False
+        
 
     return True
 
 
 
 def game_loop(estado):
-    while True:
-        if not recebe_eventos():
-            return
-
+    clock = pygame.time.Clock()
+    while recebe_eventos():
+        atualiza_estado(estado)
         desenha(estado)
+        clock.tick(60)
