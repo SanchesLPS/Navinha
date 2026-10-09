@@ -1,6 +1,4 @@
-# Checks de estudo de Pygame [VOCÊ PODE SUBSTITUIR ESTE TÍTULO POR OUTRO MELHOR]
-
-[ESTE ARQUIVO É APENAS UMA BASE PARA O SEU README. FIQUE À VONTADE PARA MODIFICÁ-LO COMO QUISER - APAGUE ESTA MENSAGEM :)]
+# Um jogo de uma nave (pequena)...
 
 Este é um projeto desenvolvido na disciplina Developer Life, do 1o semestre do curso de Ciência da Computação do Insper. O intuito deste projeto é aprender e praticar o uso da biblioteca Pygame para o desenvolvimento de jogos 2D usando Python.
 
