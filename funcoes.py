@@ -5,14 +5,15 @@ from constantes import *
 def inicializacao():
     pygame.init()
 
-    # WINDOW
-    
+    # WINDOW E CLOCK
     window = pygame.display.set_mode(TAMANHO_TELA)
     titulo = 'Navinha'
     pygame.display.set_caption(titulo)
+    clock = pygame.time.Clock()
+
 
     # CARREGA ESTRELAS 
-    def carrega_estrelas() -> tuple[ dict[str, tuple[int] | int ] ]:
+    def carrega_estrelas() :
         qtd_circulos = 20
         cor_circulo = BRANCO
 
@@ -28,9 +29,9 @@ def inicializacao():
     estrelas = carrega_estrelas()
 
     # CARREGA AS IMAGENS
-    def carrega_assets() -> dict[str , pygame.Surface]:
+    def carrega_assets() -> dict[str , pygame.Surface | pygame.font.Font]:
         nave = pygame.image.load('assets/img/playerShip1_orange.png')
-        nave = pygame.transform.scale(nave, (60,60))
+        nave = pygame.transform.scale(nave, TAMANHO_NAVE)
 
         image_fundo = pygame.image.load('assets/img/starfield.png')
         image_fundo = pygame.transform.scale(image_fundo, TAMANHO_TELA)
@@ -45,12 +46,19 @@ def inicializacao():
 
     assets = carrega_assets()
 
-    # POSICAO INICIAL DA NAVE
-    pos_nave = [TAMANHO_TELA[0]//2 - assets['nave'].get_width()//2,
-                    TAMANHO_TELA[1] - assets['nave'].get_height()]
+    # POSICAO INICIAL DA NAVE E VELOCIDADE DA NAVE
+    pos_nave = [TAMANHO_TELA[0]//2 - TAMANHO_NAVE[0],
+                    TAMANHO_TELA[1] - TAMANHO_NAVE[1]]
+    print(assets['nave'].get_width())
+
+    velocidade_nave = [0,0]
 
     # QUANTIDADE INICIAL DE VIDA
     vidas = 3
+
+    # MOVIMENTOS POSSIVEIS
+    movimentos = (pygame.K_w, pygame.K_UP , pygame.K_d, pygame.K_RIGHT, pygame.K_s, pygame.K_DOWN , pygame.K_a, pygame.K_LEFT )
+
 
     # ESTADO
     return {
@@ -58,7 +66,10 @@ def inicializacao():
         'assets' : assets,
         'estrelas' : estrelas,
         'pos_nave' : pos_nave,
-        'vidas' : vidas
+        'velocidade_nave' : velocidade_nave,
+        'vidas' : vidas,
+        'clock' : clock,
+        'movimentos' : movimentos
         
     }
 
@@ -77,7 +88,7 @@ def desenha(estado):
         pygame.draw.circle(window, estrela['cor'], estrela['pos_circulo'], estrela['raio'])
 
     # DESENHA FPS
-    fps = pygame.time.Clock().get_fps()
+    fps = int(estado['clock'].get_fps())
     fps = assets['fonte'].render(f'FPS {fps}', True, VERMELHO)
     window.blit(fps, (TAMANHO_TELA[0]-100, TAMANHO_TELA[1]-30))
 
@@ -90,35 +101,67 @@ def desenha(estado):
 
     pygame.display.update()
 
-def atualiza_estado(estado):
+
+def atualiza_posicao(estado):
     teclas = pygame.key.get_pressed()
+    velocidade = 4 
+    dx, dy = 0, 0
 
-    if teclas[pygame.K_a]:
-        print("esquerda")
+    if teclas[pygame.K_w] or teclas[pygame.K_UP]:
+        dy = -velocidade
+    if teclas[pygame.K_s] or teclas[pygame.K_DOWN]:
+        dy = velocidade
+    if teclas[pygame.K_a] or teclas[pygame.K_LEFT]:
+        dx = -velocidade
+    if teclas[pygame.K_d] or teclas[pygame.K_RIGHT]:
+        dx = velocidade
 
-    if teclas[pygame.K_d]:
-        print("direita")
+    novo_x = estado['pos_nave'][0] + dx
+    novo_y = estado['pos_nave'][1] + dy
 
-    if teclas[pygame.K_w]:
-        print("cima")
+    if novo_x < 0:
+        novo_x = 0
+    elif novo_x > TAMANHO_TELA[0] - TAMANHO_NAVE[0]:
+        novo_x = TAMANHO_TELA[0] - TAMANHO_NAVE[0]
 
-    if teclas[pygame.K_s]:
-        print("baixo")
+    if novo_y < 0:
+        novo_y = 0
+    elif novo_y > TAMANHO_TELA[1] - TAMANHO_NAVE[1]:
+        novo_y = TAMANHO_TELA[1] - TAMANHO_NAVE[1]
 
-def recebe_eventos():
+    estado['pos_nave'][0] = novo_x
+    estado['pos_nave'][1] = novo_y
+    
+def atualiza_estado(estado):
+        atualiza_posicao(estado)
+        # atualiza_posicao_meteoros(estado)
+
+        # 2. Checagem de "Eventos de Jogo" (Colisões afins)
+        # if nave_colidiu_com_meteoro(estado):
+        #     estado['vidas'] -= 1
+        #     if estado['vidas'] <= 0:
+        #         estado['tela_atual'] = 'GAME_OVER' # Mutação do estado lógico
+
+    # elif estado['tela_atual'] == 'GAME_OVER':
+        # Congela a física da nave. 
+        # Aqui pode entrar lógica de contagem de tempo para voltar ao menu.
+        pass
+
+def atualiza_eventos(estado):
     for event in pygame.event.get():
         # SE SAIR DO JOGO OU APERTAR Q
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             return False
-        
+
+
 
     return True
 
 
 
 def game_loop(estado):
-    clock = pygame.time.Clock()
-    while recebe_eventos():
+    clock = estado['clock']
+    while atualiza_eventos(estado):
         atualiza_estado(estado)
         desenha(estado)
-        clock.tick(60)
+        clock.tick(90)
