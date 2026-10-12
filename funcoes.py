@@ -26,7 +26,6 @@ def inicializacao():
         raio_circulos =  tuple( randint(1,4) for _ in range(qtd_circulos))
         return tuple({'cor' : cor_circulo, 'pos_circulo' : pos_circulo, 'raio' : raio_circulo} for pos_circulo, raio_circulo in zip(pos_circulos, raio_circulos))
 
-    estrelas = carrega_estrelas()
 
     # CARREGA AS IMAGENS
     def carrega_assets() -> dict[str , pygame.Surface | pygame.font.Font]:
@@ -44,32 +43,25 @@ def inicializacao():
 
         }
 
-    assets = carrega_assets()
-
     # POSICAO INICIAL DA NAVE E VELOCIDADE DA NAVE
     pos_nave = [TAMANHO_TELA[0]//2 - TAMANHO_NAVE[0],
                     TAMANHO_TELA[1] - TAMANHO_NAVE[1]]
-    print(assets['nave'].get_width())
-
-    velocidade_nave = [0,0]
 
     # QUANTIDADE INICIAL DE VIDA
     vidas = 3
 
-    # MOVIMENTOS POSSIVEIS
-    movimentos = (pygame.K_w, pygame.K_UP , pygame.K_d, pygame.K_RIGHT, pygame.K_s, pygame.K_DOWN , pygame.K_a, pygame.K_LEFT )
 
 
     # ESTADO
     return {
         'window' : window,
-        'assets' : assets,
-        'estrelas' : estrelas,
+        'assets' : carrega_assets(),
+        'estrelas' : carrega_estrelas(),
         'pos_nave' : pos_nave,
-        'velocidade_nave' : velocidade_nave,
+        'velocidade_nave' : [0,0],
         'vidas' : vidas,
         'clock' : clock,
-        'movimentos' : movimentos
+        't0' : pygame.time.get_ticks()
         
     }
 
@@ -103,34 +95,37 @@ def desenha(estado):
 
 
 def atualiza_posicao(estado):
+
     teclas = pygame.key.get_pressed()
-    velocidade = 4 
-    dx, dy = 0, 0
+    incremento = 240
 
-    if teclas[pygame.K_w] or teclas[pygame.K_UP]:
-        dy = -velocidade
-    if teclas[pygame.K_s] or teclas[pygame.K_DOWN]:
-        dy = velocidade
-    if teclas[pygame.K_a] or teclas[pygame.K_LEFT]:
-        dx = -velocidade
-    if teclas[pygame.K_d] or teclas[pygame.K_RIGHT]:
-        dx = velocidade
+    estado['velocidade_nave'][0] = incremento * (
+        int(teclas[pygame.K_d] or teclas[pygame.K_RIGHT])
+        - int(teclas[pygame.K_a] or teclas[pygame.K_LEFT])
+    )
+    estado['velocidade_nave'][1] = incremento * (
+        int(teclas[pygame.K_s] or teclas[pygame.K_DOWN])
+        - int(teclas[pygame.K_w] or teclas[pygame.K_UP])
+    )
 
-    novo_x = estado['pos_nave'][0] + dx
-    novo_y = estado['pos_nave'][1] + dy
+    tamanho_nave = TAMANHO_NAVE[0]
+    t1 = pygame.time.get_ticks()
+    dt = (t1 - estado['t0']) / 1000
+    estado['t0'] = t1
 
-    if novo_x < 0:
-        novo_x = 0
-    elif novo_x > TAMANHO_TELA[0] - TAMANHO_NAVE[0]:
-        novo_x = TAMANHO_TELA[0] - TAMANHO_NAVE[0]
+    prox_x = estado['pos_nave'][0] + estado['velocidade_nave'][0] * dt
+    prox_y = estado['pos_nave'][1] + estado['velocidade_nave'][1] * dt
 
-    if novo_y < 0:
-        novo_y = 0
-    elif novo_y > TAMANHO_TELA[1] - TAMANHO_NAVE[1]:
-        novo_y = TAMANHO_TELA[1] - TAMANHO_NAVE[1]
+    if prox_x < 0 or prox_x + tamanho_nave >= TAMANHO_TELA[0]:
+        prox_x = estado['pos_nave'][0]
 
-    estado['pos_nave'][0] = novo_x
-    estado['pos_nave'][1] = novo_y
+    if prox_y < 0 or prox_y + tamanho_nave >= TAMANHO_TELA[1]:
+            prox_y = estado['pos_nave'][1]
+
+    estado['pos_nave'][0], estado['pos_nave'][1] = prox_x, prox_y
+    estado['velocidade_nave'] = [0,0]
+
+    
     
 def atualiza_estado(estado):
         atualiza_posicao(estado)
