@@ -2,9 +2,6 @@ import pygame
 from random import randint
 from constantes import *
 
-def gera_meteoros(qtdMeteoro : int, tamanho):
-    pass
-
 def inicializacao():
     pygame.init()
 
@@ -50,13 +47,23 @@ def inicializacao():
         }
 
     # POSICAO INICIAL DA NAVE E VELOCIDADE DA NAVE
-    pos_nave = [TAMANHO_TELA[0]//2 - TAMANHO_NAVE[0],
-                    TAMANHO_TELA[1] - TAMANHO_NAVE[1]]
+    pos_nave = pygame.Rect((TAMANHO_TELA[0]//2 - TAMANHO_NAVE[0], TAMANHO_TELA[1] - TAMANHO_NAVE[1]), TAMANHO_NAVE)
 
     # QUANTIDADE INICIAL DE VIDA
     vidas = 3
 
-    
+    def gera_meteoro(quantidade):
+        #LISTA DE POSICOES DOS METEOROS
+        meteoros = []
+        for _ in range(quantidade):
+            meteoro = (randint(0, TAMANHO_TELA[0] - TAMANHO_METEORO[0]),
+                       randint(-TAMANHO_TELA[1], -100),
+                       TAMANHO_METEORO[0],
+                       TAMANHO_METEORO[1])
+            meteoros.append(pygame.Rect(meteoro))
+
+        return meteoros
+
 
 
 
@@ -70,7 +77,8 @@ def inicializacao():
         'vidas' : vidas,
         'clock' : clock,
         't0' : pygame.time.get_ticks(),
-        'meteoro' : gera_meteoros(2, TAMANHO_METEORO)
+        'meteoros' : gera_meteoro(30),
+        't0_meteoro': pygame.time.get_ticks()
         
     }
 
@@ -94,7 +102,8 @@ def desenha(estado):
     window.blit(fps, (TAMANHO_TELA[0]-100, TAMANHO_TELA[1]-30))
 
     # DESENHA METEORO
-    window.blit(estado['assets']['img_meteoro'], (0,0))
+    window.blits( (assets['img_meteoro'], meteoro)for meteoro in estado['meteoros'] )
+
     # DESENHA JOGADOR
     window.blit(assets['nave'], pos_nave)
 
@@ -122,33 +131,49 @@ def atualiza_posicao(estado):
     dt = (t1 - estado['t0']) / 1000
     estado['t0'] = t1
 
-    prox_x = estado['pos_nave'][0] + estado['velocidade_nave'][0] * dt
-    prox_y = estado['pos_nave'][1] + estado['velocidade_nave'][1] * dt
+    prox_x = estado['pos_nave'].x + estado['velocidade_nave'][0] * dt
+    prox_y = estado['pos_nave'].y + estado['velocidade_nave'][1] * dt
 
     if prox_x < 0 or prox_x + tamanho_nave >= TAMANHO_TELA[0]:
-        prox_x = estado['pos_nave'][0]
+        prox_x = estado['pos_nave'].x
 
     if prox_y < 0 or prox_y + tamanho_nave >= TAMANHO_TELA[1]:
-            prox_y = estado['pos_nave'][1]
+            prox_y = estado['pos_nave'].y
 
-    estado['pos_nave'][0], estado['pos_nave'][1] = prox_x, prox_y
+    estado['pos_nave'].x, estado['pos_nave'].y = prox_x, prox_y
     estado['velocidade_nave'] = [0,0]
     
+def atualiza_posicao_meteoro(estado):
+    t1 = pygame.time.get_ticks()
+    dt = (t1 - estado['t0_meteoro']) / 1000
+    estado['t0_meteoro'] = t1
+    
+    for meteoro in estado['meteoros']:
+        prox_x = meteoro.x
+        prox_y = meteoro.y + VELOCIDADE_METEORO * dt
+
+        # CASO O METEORO PASSE DA TELA, VOLTA PARA UMA POSICAO ALEATORIA 
+        if prox_y + TAMANHO_METEORO[1] >= TAMANHO_TELA[1]:
+            prox_x = randint(0, TAMANHO_TELA[0] - TAMANHO_METEORO[0])
+            prox_y = randint(-TAMANHO_TELA[1], -100)
+
+        if meteoro.colliderect(estado['pos_nave']):
+            prox_x = randint(0, TAMANHO_TELA[0] - TAMANHO_METEORO[0])
+            prox_y = randint(-TAMANHO_TELA[1], -100)
+            estado['vidas'] -= 1
+
+        meteoro.x, meteoro.y = prox_x, prox_y
+
+        
+
+        
+
+
 
 def atualiza_estado(estado):
         atualiza_posicao(estado)
-        # atualiza_posicao_meteoros(estado)
-
-        # 2. Checagem de "Eventos de Jogo" (Colisões afins)
-        # if nave_colidiu_com_meteoro(estado):
-        #     estado['vidas'] -= 1
-        #     if estado['vidas'] <= 0:
-        #         estado['tela_atual'] = 'GAME_OVER' # Mutação do estado lógico
-
-    # elif estado['tela_atual'] == 'GAME_OVER':
-        # Congela a física da nave. 
-        # Aqui pode entrar lógica de contagem de tempo para voltar ao menu.
-        pass
+        atualiza_posicao_meteoro(estado)
+        
 
 def atualiza_eventos(estado):
     for event in pygame.event.get():
