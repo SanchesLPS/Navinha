@@ -2,6 +2,9 @@ import pygame
 from random import randint
 from constantes import *
 
+def gera_meteoros(qtdMeteoro : int, tamanho):
+    pass
+
 def inicializacao():
     pygame.init()
 
@@ -14,7 +17,7 @@ def inicializacao():
 
     # CARREGA ESTRELAS 
     def carrega_estrelas() :
-        qtd_circulos = 20
+        qtd_circulos = 30
         cor_circulo = BRANCO
 
         # GERA POSICOES ALEATORIAS
@@ -36,10 +39,13 @@ def inicializacao():
         image_fundo = pygame.transform.scale(image_fundo, TAMANHO_TELA)
 
         fonte = pygame.font.Font('assets/font/PressStart2P.ttf', 12)
+
+        imagem_meteoro = pygame.image.load('assets/img/meteorBrown_med1.png')
         return {
             'nave' : nave,
             'fundo' : image_fundo,
-            'fonte' : fonte
+            'fonte' : fonte,
+            'img_meteoro' : imagem_meteoro
 
         }
 
@@ -49,6 +55,8 @@ def inicializacao():
 
     # QUANTIDADE INICIAL DE VIDA
     vidas = 3
+
+    
 
 
 
@@ -61,7 +69,8 @@ def inicializacao():
         'velocidade_nave' : [0,0],
         'vidas' : vidas,
         'clock' : clock,
-        't0' : pygame.time.get_ticks()
+        't0' : pygame.time.get_ticks(),
+        'meteoro' : gera_meteoros(2, TAMANHO_METEORO)
         
     }
 
@@ -84,6 +93,8 @@ def desenha(estado):
     fps = assets['fonte'].render(f'FPS {fps}', True, VERMELHO)
     window.blit(fps, (TAMANHO_TELA[0]-100, TAMANHO_TELA[1]-30))
 
+    # DESENHA METEORO
+    window.blit(estado['assets']['img_meteoro'], (0,0))
     # DESENHA JOGADOR
     window.blit(assets['nave'], pos_nave)
 
@@ -100,12 +111,10 @@ def atualiza_posicao(estado):
     incremento = 240
 
     estado['velocidade_nave'][0] = incremento * (
-        int(teclas[pygame.K_d] or teclas[pygame.K_RIGHT])
-        - int(teclas[pygame.K_a] or teclas[pygame.K_LEFT])
+        int(teclas[pygame.K_d] or teclas[pygame.K_RIGHT]) - int(teclas[pygame.K_a] or teclas[pygame.K_LEFT])
     )
     estado['velocidade_nave'][1] = incremento * (
-        int(teclas[pygame.K_s] or teclas[pygame.K_DOWN])
-        - int(teclas[pygame.K_w] or teclas[pygame.K_UP])
+        int(teclas[pygame.K_s] or teclas[pygame.K_DOWN]) - int(teclas[pygame.K_w] or teclas[pygame.K_UP])
     )
 
     tamanho_nave = TAMANHO_NAVE[0]
@@ -124,9 +133,8 @@ def atualiza_posicao(estado):
 
     estado['pos_nave'][0], estado['pos_nave'][1] = prox_x, prox_y
     estado['velocidade_nave'] = [0,0]
+    
 
-    
-    
 def atualiza_estado(estado):
         atualiza_posicao(estado)
         # atualiza_posicao_meteoros(estado)
@@ -147,9 +155,7 @@ def atualiza_eventos(estado):
         # SE SAIR DO JOGO OU APERTAR Q
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             return False
-
-
-
+        
     return True
 
 
@@ -159,4 +165,4 @@ def game_loop(estado):
     while atualiza_eventos(estado):
         atualiza_estado(estado)
         desenha(estado)
-        clock.tick(90)
+        clock.tick(FPS)
