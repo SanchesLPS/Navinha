@@ -38,11 +38,16 @@ def inicializacao():
         fonte = pygame.font.Font('assets/font/PressStart2P.ttf', 12)
 
         imagem_meteoro = pygame.image.load('assets/img/meteorBrown_med1.png')
+
+        som_tiro = pygame.mixer.Sound('assets/snd/pew.wav')
+
+
         return {
             'nave' : nave,
             'fundo' : image_fundo,
             'fonte' : fonte,
-            'img_meteoro' : imagem_meteoro
+            'img_meteoro' : imagem_meteoro,
+            'som_tiro' : som_tiro
 
         }
 
@@ -64,7 +69,9 @@ def inicializacao():
 
         return meteoros
 
-
+    # COMECA A MUSICA 
+    pygame.mixer.music.load('assets/snd/tgfcoder-FrozenJam-SeamlessLoop.ogg')
+    pygame.mixer.music.play()
 
 
     # ESTADO
@@ -176,10 +183,16 @@ def atualiza_estado(estado):
         
 
 def atualiza_eventos(estado):
+    if estado['vidas'] <= 0:
+        return False
     for event in pygame.event.get():
         # SE SAIR DO JOGO OU APERTAR Q
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             return False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                estado['assets']['som_tiro'].play()
         
     return True
 
