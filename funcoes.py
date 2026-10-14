@@ -41,6 +41,12 @@ def inicializacao():
 
         som_tiro = pygame.mixer.Sound('assets/snd/pew.wav')
 
+        # INICIA A MUSICA E COLOCA EM SOM BAIXO PARA NAO ESTOURAR
+        pygame.mixer.music.load('assets/snd/tgfcoder-FrozenJam-SeamlessLoop.ogg')
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_volume(0.1)
+        
+
 
         return {
             'nave' : nave,
@@ -68,10 +74,8 @@ def inicializacao():
             meteoros.append(pygame.Rect(meteoro))
 
         return meteoros
-
-    # COMECA A MUSICA 
-    pygame.mixer.music.load('assets/snd/tgfcoder-FrozenJam-SeamlessLoop.ogg')
-    pygame.mixer.music.play()
+ 
+    
 
 
     # ESTADO
@@ -119,7 +123,7 @@ def desenha(estado):
     window.blit(coracoes, (0,0))
 
     pygame.display.update()
-
+    
 
 def atualiza_posicao(estado):
 
